@@ -154,7 +154,7 @@ namespace KEN_NFC_NEW
 
 			if (!tagInfo.IsSupported)
 			{
-				await ShowAlert("Unsupported tag (app)", title);
+				await ShowAlert("Onherkenbare tag. Deze tag wordt niet ondersteund door dit apparaat of werkt incorrect.", title);
 			}
 			else if (tagInfo.IsEmpty)
 			{
