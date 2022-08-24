@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="KEN_NFC_NEW.MainPage">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style TargetType="Button">
+                <Setter Property="BorderColor" Value="#253d31" />
+                <Setter Property="BorderWidth" Value="1.5" />
+                <Setter Property="BackgroundColor" Value="#32a860" />
+                <Setter Property="CornerRadius" Value="10" />
+            </Style>
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="Black" />
+            </Style>        
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView BackgroundColor="White" Padding="0">
+        <StackLayout HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
+            <Image Source="nfclogo.png"
+                   WidthRequest="200"
+                   HeightRequest="200"
+                   Margin="0" />
+
+            <Button x:Name="ListenerBtn"
+                    Clicked="ListenerButtonClicked"
+                    IsEnabled="True"
+                    BackgroundColor="#bd3746"
+                    Text="Stop scanner" />
+
+            <Frame BorderColor="Gray" HasShadow="True">
+                <StackLayout>
+
+                    <StackLayout Padding="0"
+                                 HorizontalOptions="CenterAndExpand"
+                                 Orientation="Horizontal"
+                                 Spacing="0">
+
+                        <CheckBox x:Name="ChkReadOnly"
+                                  IsChecked="False"
+                                  IsEnabled="True"
+                                  VerticalOptions="Center"
+                                  Color="Red" />
+
+                        <Label FontAttributes="Bold"
+                               Text="Alleen-lezen?"
+                               TextColor="Red"
+                               VerticalOptions="Center" />
+                    </StackLayout>
+
+                    <Button Clicked="Button_Clicked_StartWriting"
+                            IsEnabled="True"
+                            Text="Tekst schrijven" />
+
+                    <Button Clicked="Button_Clicked_StartWriting_Uri"
+                            IsEnabled="True"
+                            Text="Link schrijven" />
+
+                    <Button Clicked="Button_Clicked_StartWriting_Custom"
+                            IsEnabled="True"
+                            Text="Eigen waardes" />
+
+                </StackLayout>
+            </Frame>
+
+            <Button Clicked="Button_Clicked_FormatTag"
+                    IsEnabled="True"
+                    Text="Tag resetten"
+                    BackgroundColor="#bd3746" />
+            
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>
