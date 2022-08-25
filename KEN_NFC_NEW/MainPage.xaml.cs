@@ -10,7 +10,7 @@ namespace KEN_NFC_NEW
 	public partial class MainPage : ContentPage, INotifyPropertyChanged
 	{
 		public const string ALERT_TITLE = "NFC";
-		public const string MIME_TYPE = "application/com.companyname.nfcsample";
+		public const string MIME_TYPE = "application/com.ken.scanner";
 
 		NFCNdefTypeFormat _type;
 		bool _makeReadOnly = false;
@@ -114,6 +114,7 @@ namespace KEN_NFC_NEW
 		/// </summary>
 		void UnsubscribeEvents()
 		{
+			Console.WriteLine("Unsubscribing...");
 			CrossNFC.Current.OnMessageReceived -= Current_OnMessageReceived;
 			CrossNFC.Current.OnMessagePublished -= Current_OnMessagePublished;
 			CrossNFC.Current.OnTagDiscovered -= Current_OnTagDiscovered;
@@ -146,6 +147,9 @@ namespace KEN_NFC_NEW
 		/// <param name="tagInfo">Received <see cref="ITagInfo"/></param>
 		async void Current_OnMessageReceived(ITagInfo tagInfo)
 		{
+			Console.WriteLine("Tag received");
+			App.Current.MainPage = new NavigationPage(new MainPage());
+			
 			if (tagInfo == null)
 			{
 				await ShowAlert("No tag found");
@@ -187,12 +191,11 @@ namespace KEN_NFC_NEW
 		{
 			try
 			{
-				ChkReadOnly.IsChecked = false;
 				CrossNFC.Current.StopPublishing();
 				if (tagInfo.IsEmpty)
-					await ShowAlert("Formatting tag operation successful");
+					await ShowAlert("Chip is gereset.");
 				else
-					await ShowAlert("Writing tag operation successful");
+					await ShowAlert("De waarde is op de chip geplaatst.");
 			}
 			catch (Exception ex)
 			{
@@ -207,6 +210,8 @@ namespace KEN_NFC_NEW
 		/// <param name="format">Format the tag</param>
 		async void Current_OnTagDiscovered(ITagInfo tagInfo, bool format)
 		{
+			App.Current.MainPage = new NavigationPage(new MainPage());
+
 			if (!CrossNFC.Current.IsWritingTagSupported)
 			{
 				await ShowAlert("Writing tag is not supported on this device");
@@ -223,7 +228,7 @@ namespace KEN_NFC_NEW
 						{
 							TypeFormat = NFCNdefTypeFormat.WellKnown,
 							MimeType = MIME_TYPE,
-							Payload = NFCUtils.EncodeToByteArray("Plugin.NFC is awesome!"),
+							Payload = NFCUtils.EncodeToByteArray(Value_Entry.Text),
 							LanguageCode = "en"
 						};
 						break;
@@ -265,43 +270,16 @@ namespace KEN_NFC_NEW
 		}
 
 		/// <summary>
-		/// Start or stop listening for NFC Tags when "ListenerBtn" button is clicked
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		async void ListenerButtonClicked(object sender, System.EventArgs e)
-		{
-			if(ListenerBtn.Text.ToLower() == "Start scanner".ToLower()) { 
-				ListenerBtn.Text = "Stop scanner";
-				ListenerBtn.BackgroundColor = Color.FromHex("bd3746");
-				await BeginListening();
-			} else {
-				ListenerBtn.Text = "Start scanner";
-				ListenerBtn.BackgroundColor = Color.FromHex("32a860");
-				await StopListening();
-			}
-		}
-
-		/// <summary>
 		/// Start publish operation to write the tag (TEXT) when <see cref="Current_OnTagDiscovered(ITagInfo, bool)"/> event will be raised
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		async void Button_Clicked_StartWriting(object sender, System.EventArgs e) => await Publish(NFCNdefTypeFormat.WellKnown);
-
-		/// <summary>
-		/// Start publish operation to write the tag (URI) when <see cref="Current_OnTagDiscovered(ITagInfo, bool)"/> event will be raised
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		async void Button_Clicked_StartWriting_Uri(object sender, System.EventArgs e) => await Publish(NFCNdefTypeFormat.Uri);
-
-		/// <summary>
-		/// Start publish operation to write the tag (CUSTOM) when <see cref="Current_OnTagDiscovered(ITagInfo, bool)"/> event will be raised
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		async void Button_Clicked_StartWriting_Custom(object sender, System.EventArgs e) => await Publish(NFCNdefTypeFormat.Mime);
+		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
+		{
+			if(Value_Entry.Text != "")
+				await Publish(NFCNdefTypeFormat.WellKnown);
+			
+		}
 
 		/// <summary>
 		/// Start publish operation to format the tag when <see cref="Current_OnTagDiscovered(ITagInfo, bool)"/> event will be raised
@@ -321,17 +299,7 @@ namespace KEN_NFC_NEW
 			try
 			{
 				_type = NFCNdefTypeFormat.Empty;
-				if (ChkReadOnly.IsChecked)
-				{
-					if (!await DisplayAlert("Warning", "Make a Tag read-only operation is permanent and can't be undone. Are you sure you wish to continue?", "Yes", "No"))
-					{
-						ChkReadOnly.IsChecked = false;
-						return;
-					}
-					_makeReadOnly = true;
-				}
-				else
-					_makeReadOnly = false;
+				_makeReadOnly = false;
 
 				if (type.HasValue) _type = type.Value;
 				CrossNFC.Current.StartPublishing(!type.HasValue);
@@ -420,5 +388,5 @@ namespace KEN_NFC_NEW
 				await ShowAlert(ex.Message);
 			}
 		}
-	}
+    }
 }

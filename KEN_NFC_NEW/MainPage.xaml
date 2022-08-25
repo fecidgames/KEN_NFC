@@ -10,6 +10,7 @@
                 <Setter Property="BorderWidth" Value="1.5" />
                 <Setter Property="BackgroundColor" Value="#32a860" />
                 <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Margin" Value="30, 0, 30, 0"/>
             </Style>
             <Style TargetType="Label">
                 <Setter Property="TextColor" Value="Black" />
@@ -20,59 +21,44 @@
     <ScrollView BackgroundColor="White" Padding="0">
         <StackLayout HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
             <Image Source="nfclogo.png"
-                   WidthRequest="200"
-                   HeightRequest="200"
-                   Margin="0" />
+                   WidthRequest="250"
+                   HeightRequest="250"
+                   Margin="20, 0, 20, 0" />
 
-            <Button x:Name="ListenerBtn"
-                    Clicked="ListenerButtonClicked"
-                    IsEnabled="True"
-                    BackgroundColor="#bd3746"
-                    Text="Stop scanner" />
+            <Entry
+                x:Name="Value_Entry"
+                TextColor="Black"
+                PlaceholderColor="Gray"
+                Placeholder="Waarde"
+                Margin="30, 0, 30, 0"/>
 
-            <Frame BorderColor="Gray" HasShadow="True">
-                <StackLayout>
+            <StackLayout>
 
-                    <StackLayout Padding="0"
+                <StackLayout Padding="0"
                                  HorizontalOptions="CenterAndExpand"
                                  Orientation="Horizontal"
                                  Spacing="0">
-
-                        <CheckBox x:Name="ChkReadOnly"
-                                  IsChecked="False"
-                                  IsEnabled="True"
-                                  VerticalOptions="Center"
-                                  Color="Red" />
-
-                        <Label FontAttributes="Bold"
-                               Text="Alleen-lezen?"
-                               TextColor="Red"
-                               VerticalOptions="Center" />
-                    </StackLayout>
-
-                    <Button Clicked="Button_Clicked_StartWriting"
-                            IsEnabled="True"
-                            Text="Tekst schrijven" />
-
-                    <Button Clicked="Button_Clicked_StartWriting_Uri"
-                            IsEnabled="True"
-                            Text="Link schrijven" />
-
-                    <Button Clicked="Button_Clicked_StartWriting_Custom"
-                            IsEnabled="True"
-                            Text="Eigen waardes" />
-
                 </StackLayout>
-            </Frame>
+
+                <Button Clicked="Button_Clicked_StartWriting"
+                            IsEnabled="True"
+                            Text="Chip schrijven" />
+            </StackLayout>
 
             <Button Clicked="Button_Clicked_FormatTag"
                     IsEnabled="True"
-                    Text="Tag resetten"
+                    Text="Chip resetten"
                     BackgroundColor="#bd3746" />
 
+            <BoxView 
+                   HeightRequest="1"
+                   Color="LightGray"
+                   Margin ="0, 10, 0, 10"
+                   ScaleX="2"/>
+            
             <Button Clicked="Button_Clicked_Scan"
                     IsEnabled="True"
-                    Text="Scan een code"
+                    Text="Of scan een code"
                     x:Name="Button_Scan"/>
             <Entry x:Name="Text_Barcode"
                    Placeholder="Text to scan"/>

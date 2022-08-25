@@ -30,11 +30,21 @@ namespace KEN_NFC_NEW
             return true;
         }
 
+        async private Task ShowMSG(string title, 
+            string msg,
+            string btntext,
+            Action callback)
+        {
+            await DisplayAlert(title, msg, btntext);
+            callback?.Invoke();
+        }
+
         async private void ZXingScannerView_OnScanResult(ZXing.Result result)
         {
             Device.BeginInvokeOnMainThread(() => 
             {
-                DisplayAlert("Resultaat", result.Text + ",\n" + result.BarcodeFormat.ToString(), "OK");
+                ShowMSG("Resultaat", result.Text + ",\n" + result.BarcodeFormat.ToString(), "OK", async () => { ScannerView.IsScanning = true; } );
+                ScannerView.IsScanning = false;
             });
             
         }

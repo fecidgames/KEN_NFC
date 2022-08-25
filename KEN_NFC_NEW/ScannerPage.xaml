@@ -16,7 +16,8 @@
     
     <ContentPage.Content>
         <StackLayout>
-            <zxing:ZXingScannerView IsScanning="True"
+            <zxing:ZXingScannerView x:Name="ScannerView"
+                                    IsScanning="True"
                                     OnScanResult="ZXingScannerView_OnScanResult"/>
             <Button Text="Terug"
                     Padding="0"
