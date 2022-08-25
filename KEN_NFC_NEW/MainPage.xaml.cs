@@ -3,7 +3,10 @@ using System;
 using System.ComponentModel;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Xamarin.Forms;
+using Xamarin.Essentials;
+using Acr.UserDialogs;
 
 namespace KEN_NFC_NEW
 {
@@ -49,6 +52,11 @@ namespace KEN_NFC_NEW
 		public MainPage()
 		{
 			InitializeComponent();
+			if (Transporter.code != null && Value_Entry != null)
+			{
+				Value_Entry.Text = Transporter.code;
+				Transporter.code = "";
+			}
 		}
 
 		protected async override void OnAppearing()
@@ -172,9 +180,22 @@ namespace KEN_NFC_NEW
 			else
 			{
 				var first = tagInfo.Records[0];
-				await ShowAlert(GetMessage(first), title);
+				await ShowAlert(GetMessage(first) + "\nThe text has been saved to a file.", title);
+
+				//Saving text to a txt file here (override possible old file):
+				string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
+				File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
+				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Saved: " + fileName, new TimeSpan(3));
 			}
 		}
+
+		string FileOutput(string msg)
+        {
+			string id = "T:" + msg;
+			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
+			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
+			return id + ";" + datetime + ";" + loc; //Maybe add geolocation later :>
+        }
 
 		/// <summary>
 		/// Event raised when user cancelled NFC session on iOS 
@@ -276,8 +297,10 @@ namespace KEN_NFC_NEW
 		/// <param name="e"></param>
 		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
 		{
-			if(Value_Entry.Text != "")
+			if (Value_Entry.Text != null)
 				await Publish(NFCNdefTypeFormat.WellKnown);
+			else
+				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde kan niet leeg zijn.", new TimeSpan(3));
 			
 		}
 

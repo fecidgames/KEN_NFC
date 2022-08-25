@@ -7,6 +7,7 @@ using Android.OS;
 using Android.Nfc;
 using Plugin.NFC;
 using Android.Content;
+using Acr.UserDialogs;
 
 namespace KEN_NFC_NEW.Droid {
 
@@ -22,6 +23,7 @@ namespace KEN_NFC_NEW.Droid {
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
 
             ZXing.Net.Mobile.Forms.Android.Platform.Init();
+            Acr.UserDialogs.Extended.UserDialogs.Init(this);
 
             LoadApplication(new App());
         }
