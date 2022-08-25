@@ -3,7 +3,8 @@ In opdracht van KEN Engineering
 
 ## Patch notes:
 #001:
-	Initial commit, no comment.\n
+	Initial commit, no comment.
+	
 #002:
 	- UI overhaul
 	- Fixed barcode scanner functionality
