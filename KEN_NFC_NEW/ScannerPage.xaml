@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Mobile.Forms;assembly=ZXing.Net.Mobile.Forms"
+             x:Class="KEN_NFC_NEW.ScannerPage">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style TargetType="Button">
+                <Setter Property="BorderColor" Value="#253d31" />
+                <Setter Property="BorderWidth" Value="1.5" />
+                <Setter Property="BackgroundColor" Value="#32a860" />
+                <Setter Property="CornerRadius" Value="10" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    
+    <ContentPage.Content>
+        <StackLayout>
+            <zxing:ZXingScannerView IsScanning="True"
+                                    OnScanResult="ZXingScannerView_OnScanResult"/>
+            <Button Text="Terug"
+                    Padding="0"
+                    Clicked="Button_Clicked_Back"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

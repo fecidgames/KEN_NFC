@@ -4,5 +4,6 @@
     <application android:label="KEN_NFC_NEW.Android" android:theme="@style/MainTheme"></application>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
   <uses-permission android:name="android.permission.NFC" />
+  <uses-permission android:name="android.permission.CAMERA"/>
   <uses-feature android:name="android.hardware.nfc" android:required="true" />
 </manifest>

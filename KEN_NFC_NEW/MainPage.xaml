@@ -69,7 +69,14 @@
                     IsEnabled="True"
                     Text="Tag resetten"
                     BackgroundColor="#bd3746" />
-            
+
+            <Button Clicked="Button_Clicked_Scan"
+                    IsEnabled="True"
+                    Text="Scan een code"
+                    x:Name="Button_Scan"/>
+            <Entry x:Name="Text_Barcode"
+                   Placeholder="Text to scan"/>
+
         </StackLayout>
     </ScrollView>
 

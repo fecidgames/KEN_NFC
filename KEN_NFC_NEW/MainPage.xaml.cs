@@ -104,6 +104,11 @@ namespace KEN_NFC_NEW
 				CrossNFC.Current.OniOSReadingSessionCancelled += Current_OniOSReadingSessionCancelled;
 		}
 
+		void Button_Clicked_Scan(object sender, EventArgs e)
+        {
+			App.Current.MainPage = new NavigationPage(new ScannerPage());
+		}
+
 		/// <summary>
 		/// Unsubscribe from the NFC events
 		/// </summary>
