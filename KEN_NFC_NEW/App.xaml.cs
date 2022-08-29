@@ -1,6 +1,8 @@
 ﻿using System;
 using Xamarin.Forms;
+using Xamarin.Essentials;
 using Xamarin.Forms.Xaml;
+using Acr.UserDialogs;
 
 namespace KEN_NFC_NEW
 {
@@ -9,7 +11,6 @@ namespace KEN_NFC_NEW
         public App()
         {
             InitializeComponent();
-
             MainPage = new NavigationPage(new MainPage());
         }
 

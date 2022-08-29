@@ -15,9 +15,14 @@ namespace KEN_NFC_NEW.Droid {
     [IntentFilter(new[] {NfcAdapter.ActionNdefDiscovered}, Categories = new[] {Intent.CategoryDefault}, DataMimeType = MainPage.MIME_TYPE)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity {
 
+        public static MainActivity Instance { get; private set; }
+
         protected override void OnCreate(Bundle savedInstanceState) {
             base.OnCreate(savedInstanceState);
             CrossNFC.Init(this);
+            Rg.Plugins.Popup.Popup.Init(this);
+
+            Instance = this;
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
@@ -44,6 +49,11 @@ namespace KEN_NFC_NEW.Droid {
         protected override void OnNewIntent(Intent intent) {
             base.OnNewIntent(intent);
             CrossNFC.OnNewIntent(intent);
+        }
+
+        public override void OnBackPressed()
+        {
+            Rg.Plugins.Popup.Popup.SendBackPressed(base.OnBackPressed);
         }
     }
 }

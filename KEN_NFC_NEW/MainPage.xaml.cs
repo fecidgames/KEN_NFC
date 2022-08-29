@@ -7,6 +7,7 @@ using System.IO;
 using Xamarin.Forms;
 using Xamarin.Essentials;
 using Acr.UserDialogs;
+using Rg.Plugins.Popup.Extensions;
 
 namespace KEN_NFC_NEW
 {
@@ -52,11 +53,24 @@ namespace KEN_NFC_NEW
 		public MainPage()
 		{
 			InitializeComponent();
-			if (Transporter.code != null && Value_Entry != null)
-			{
-				Value_Entry.Text = Transporter.code;
-				Transporter.code = "";
+			if(!Transporter.replaceMode) 
+			{ 
+				if (Transporter.code != null && Value_Entry != null)
+				{
+					Value_Entry.Text = Transporter.code;
+					Transporter.code = "";
+				}
 			}
+			if(Transporter.replaceMode)
+            {
+				ShowAlert("Scan de NFC-tag om de nieuwe waarde te schrijven.");
+				ReplaceFinish();
+            }
+		}
+
+		private async void ReplaceFinish()
+        {
+			await Publish(NFCNdefTypeFormat.WellKnown);
 		}
 
 		protected async override void OnAppearing()
@@ -184,17 +198,23 @@ namespace KEN_NFC_NEW
 
 				//Saving text to a txt file here (override possible old file):
 				string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
-				File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
-				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Saved: " + fileName, new TimeSpan(3));
+				try { 
+					File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
+					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen: " + fileName, new TimeSpan(3));
+				} catch (Exception e)
+                {
+					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Er is een fout opgetreden!", new TimeSpan(3));
+				}
 			}
 		}
 
 		string FileOutput(string msg)
         {
 			string id = "T:" + msg;
+			string oldid = "O:" + ((Transporter.replaceMode) ? Transporter.oldCode : "null");
 			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
 			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
-			return id + ";" + datetime + ";" + loc; //Maybe add geolocation later :>
+			return id + ";" + oldid + ";" + datetime + ";" + loc;
         }
 
 		/// <summary>
@@ -216,7 +236,20 @@ namespace KEN_NFC_NEW
 				if (tagInfo.IsEmpty)
 					await ShowAlert("Chip is gereset.");
 				else
-					await ShowAlert("De waarde is op de chip geplaatst.");
+                {
+					string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
+					try
+					{
+						File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
+						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst en opgeslagen: " + fileName, new TimeSpan(3));
+						Transporter.replaceMode = false;
+					}
+					catch (Exception e)
+					{
+						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Er is een fout opgetreden!", new TimeSpan(3));
+					}
+				}
+					
 			}
 			catch (Exception ex)
 			{
@@ -249,7 +282,7 @@ namespace KEN_NFC_NEW
 						{
 							TypeFormat = NFCNdefTypeFormat.WellKnown,
 							MimeType = MIME_TYPE,
-							Payload = NFCUtils.EncodeToByteArray(Value_Entry.Text),
+							Payload = (Transporter.replaceMode) ? NFCUtils.EncodeToByteArray(Transporter.code) : NFCUtils.EncodeToByteArray(Value_Entry.Text),
 							LanguageCode = "en"
 						};
 						break;
@@ -297,7 +330,7 @@ namespace KEN_NFC_NEW
 		/// <param name="e"></param>
 		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
 		{
-			if (Value_Entry.Text != null)
+			if (Value_Entry.Text != null && Value_Entry.Text != "")
 				await Publish(NFCNdefTypeFormat.WellKnown);
 			else
 				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde kan niet leeg zijn.", new TimeSpan(3));
@@ -309,7 +342,11 @@ namespace KEN_NFC_NEW
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		async void Button_Clicked_FormatTag(object sender, System.EventArgs e) => await Publish();
+		async void Button_Clicked_Replace(object sender, System.EventArgs e)
+        {
+			Transporter.replaceMode = true;
+			await Navigation.PushPopupAsync(new ReplacePopup());
+        }
 
 		/// <summary>
 		/// Task to publish data to the tag

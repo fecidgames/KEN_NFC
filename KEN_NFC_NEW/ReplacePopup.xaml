@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<pages:PopupPage  xmlns:pages="http://rotorgames.com" xmlns="http://xamarin.com/schemas/2014/forms"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                  x:Class="KEN_NFC_NEW.ReplacePopup">
+
+    <StackLayout 
+                 HorizontalOptions="Center"
+                 VerticalOptions="Center"
+                 WidthRequest="300"
+                 HeightRequest="200"
+                 BackgroundColor="White">
+
+        <Label Text="Vul de huidige code in"
+               TextColor="Black"
+               FontSize="Large"
+               FontAttributes="Bold"
+               Padding="10"/>
+
+        <Entry
+                x:Name="Value_Entry"
+                TextColor="Black"
+                PlaceholderColor="Gray"
+                Placeholder="Code"
+                Margin="30, 0, 30, 0"/>
+        
+        <Button 
+                Margin="10" 
+                Text="Volgende" 
+                Clicked="Button_Clicked"/>
+
+    </StackLayout>
+    
+</pages:PopupPage>

@@ -45,10 +45,9 @@
                             Text="Chip schrijven" />
             </StackLayout>
 
-            <Button Clicked="Button_Clicked_FormatTag"
+            <Button Clicked="Button_Clicked_Replace"
                     IsEnabled="True"
-                    Text="Chip resetten"
-                    BackgroundColor="#bd3746" />
+                    Text="Chip vervangen" />
 
             <BoxView 
                    HeightRequest="1"
@@ -59,7 +58,8 @@
             <Button Clicked="Button_Clicked_Scan"
                     IsEnabled="True"
                     Text="Of scan een code"
-                    x:Name="Button_Scan"/>
+                    x:Name="Button_Scan"
+                    BackgroundColor="#bf4bcc" />
             <Entry x:Name="Text_Barcode"
                    Placeholder="Text to scan"/>
 
