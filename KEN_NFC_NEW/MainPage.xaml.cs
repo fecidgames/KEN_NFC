@@ -14,7 +14,7 @@ namespace KEN_NFC_NEW
 	public partial class MainPage : ContentPage, INotifyPropertyChanged
 	{
 		public const string ALERT_TITLE = "NFC";
-		public const string MIME_TYPE = "application/com.ken.scanner";
+		public const string MIME_TYPE = "application/com.ken.nfcapp";
 
 		NFCNdefTypeFormat _type;
 		bool _makeReadOnly = false;
@@ -201,7 +201,7 @@ namespace KEN_NFC_NEW
 				try { 
 					File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen: " + fileName, new TimeSpan(3));
-				} catch (Exception e)
+				} catch (Exception)
                 {
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Er is een fout opgetreden!", new TimeSpan(3));
 				}
@@ -244,9 +244,10 @@ namespace KEN_NFC_NEW
 						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst en opgeslagen: " + fileName, new TimeSpan(3));
 						Transporter.replaceMode = false;
 					}
-					catch (Exception e)
+					catch (Exception ex)
 					{
 						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Er is een fout opgetreden!", new TimeSpan(3));
+						Console.WriteLine("StackTrace: " + ex.Message);
 					}
 				}
 					
