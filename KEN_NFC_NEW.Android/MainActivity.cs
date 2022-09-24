@@ -4,15 +4,24 @@ using Android.App;
 using Android.Content.PM;
 using Android.Runtime;
 using Android.OS;
+using Xamarin.Essentials;
 using Android.Nfc;
 using Plugin.NFC;
 using Android.Content;
 using Acr.UserDialogs;
+using System.Collections.Generic;
+using Android.Support.V4.Content;
+using Android.Support.V4.App;
+using Android;
+using Xamarin.Forms;
+using System.Threading.Tasks;
+using System.IO;
+using Java.IO;
 
 namespace KEN_NFC_NEW.Droid {
 
-    [Activity(Label = "KEN_NFC_NEW", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize )]
-    [IntentFilter(new[] {NfcAdapter.ActionNdefDiscovered}, Categories = new[] {Intent.CategoryDefault}, DataMimeType = MainPage.MIME_TYPE)]
+    [Activity(Label = "KEN_NFC", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize )]
+    [IntentFilter(new[] {NfcAdapter.ActionTagDiscovered}, Categories = new[] {Intent.CategoryDefault}, DataMimeType = MainPage.MIME_TYPE)]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity {
 
         public static MainActivity Instance { get; private set; }

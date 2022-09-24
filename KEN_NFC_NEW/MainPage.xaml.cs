@@ -8,6 +8,9 @@ using Xamarin.Forms;
 using Xamarin.Essentials;
 using Acr.UserDialogs;
 using Rg.Plugins.Popup.Extensions;
+using Plugin.Permissions;
+using Plugin.Permissions.Abstractions;
+using Plugin.FileIO;
 
 namespace KEN_NFC_NEW
 {
@@ -66,7 +69,7 @@ namespace KEN_NFC_NEW
 				ShowAlert("Scan de NFC-tag om de nieuwe waarde te schrijven.");
 				//Check if you still actually need to write to the tag!!!
             }
-		}
+        }
 
 		protected async override void OnAppearing()
 		{
@@ -194,12 +197,17 @@ namespace KEN_NFC_NEW
 
 				//Saving text to a txt file here (override possible old file):
 				string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
-				try { 
-					File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
-					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen: " + fileName, new TimeSpan(3));
-				} catch (Exception)
+				try {
+					var filePerm = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
+					if (filePerm != Xamarin.Essentials.PermissionStatus.Granted)
+						filePerm = await Permissions.RequestAsync<Permissions.StorageWrite>();
+
+					DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", tagInfo.Records[0].Message);
+					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen!", new TimeSpan(3));
+				} catch (Exception e)
                 {
-					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Er is een fout opgetreden!", new TimeSpan(3));
+					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opslaan mislukt, zie console.", new TimeSpan(3));
+					Console.WriteLine("Stacktrace: " + e.Message);
 				}
 			}
 		}
@@ -236,13 +244,18 @@ namespace KEN_NFC_NEW
 					string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
 					try
 					{
-						File.WriteAllText(fileName, FileOutput(tagInfo.Records[0].Message));
-						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst en opgeslagen: " + fileName, new TimeSpan(3));
+						var filePerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.Storage);
+						if (filePerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
+							await CrossPermissions.Current.RequestPermissionsAsync(Permission.Storage);
+
+						DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", tagInfo.Records[0].Message);
+
+						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst en opgeslagen", new TimeSpan(3));
 						Transporter.replaceMode = false;
 					}
 					catch (Exception ex)
 					{
-						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Er is een fout opgetreden!", new TimeSpan(3));
+						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst, maar het bestand is niet geschreven. Zie console.", new TimeSpan(3));
 						Console.WriteLine("StackTrace: " + ex.Message);
 					}
 				}
@@ -331,7 +344,13 @@ namespace KEN_NFC_NEW
 		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
 		{
 			if (Value_Entry.Text != null && Value_Entry.Text != "")
+			{
+				var locPerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.LocationWhenInUse);
+				if(locPerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
+					await CrossPermissions.Current.RequestPermissionsAsync(Permission.LocationWhenInUse);
+
 				await Publish(NFCNdefTypeFormat.Uri);
+			} 
 			else
 				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde kan niet leeg zijn.", new TimeSpan(3));
 			

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KEN_NFC_NEW": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
