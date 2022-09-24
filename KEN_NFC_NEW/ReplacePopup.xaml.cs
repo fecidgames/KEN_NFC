@@ -19,6 +19,12 @@ namespace KEN_NFC_NEW
             InitializeComponent();
         }
 
+        protected override bool OnBackButtonPressed()
+        {
+            Transporter.replaceMode = false;
+            return false;
+        }
+
         private void Button_Clicked(object sender, EventArgs e)
         {
             Transporter.oldCode = Value_Entry.Text;

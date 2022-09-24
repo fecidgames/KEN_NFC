@@ -52,6 +52,7 @@ namespace KEN_NFC_NEW
 		}
 
 		public bool NfcIsDisabled => !NfcIsEnabled;
+		private bool replacePopupGone = false;
 
 		public MainPage()
 		{
@@ -66,9 +67,15 @@ namespace KEN_NFC_NEW
 			}
 			if(Transporter.replaceMode)
             {
+				if (Transporter.code != null)
+				{
+					Value_Entry.Text = Transporter.code;
+					Transporter.code = "";
+				}
+
 				ShowAlert("Scan de NFC-tag om de nieuwe waarde te schrijven.");
-				//Check if you still actually need to write to the tag!!!
-            }
+				replacePopupGone = true;
+			}
         }
 
 		protected async override void OnAppearing()
@@ -94,6 +101,9 @@ namespace KEN_NFC_NEW
 				SubscribeEvents();
 
 				await StartListeningIfNotiOS();
+
+				if (Transporter.replaceMode && replacePopupGone)
+					await Publish(NFCNdefTypeFormat.Uri);
 			}
 		}
 
@@ -101,6 +111,7 @@ namespace KEN_NFC_NEW
 		{
 			UnsubscribeEvents();
 			CrossNFC.Current.StopListening();
+			Transporter.replaceMode = false;
 			return base.OnBackButtonPressed();
 		}
 
@@ -168,9 +179,8 @@ namespace KEN_NFC_NEW
 		/// <param name="tagInfo">Received <see cref="ITagInfo"/></param>
 		async void Current_OnMessageReceived(ITagInfo tagInfo)
 		{
-			Console.WriteLine("Tag received");
 			App.Current.MainPage = new NavigationPage(new MainPage());
-			
+
 			if (tagInfo == null)
 			{
 				await ShowAlert("No tag found");
@@ -202,7 +212,7 @@ namespace KEN_NFC_NEW
 					if (filePerm != Xamarin.Essentials.PermissionStatus.Granted)
 						filePerm = await Permissions.RequestAsync<Permissions.StorageWrite>();
 
-					DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", tagInfo.Records[0].Message);
+					DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", FileOutput(tagInfo.Records[0].Message));
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen!", new TimeSpan(3));
 				} catch (Exception e)
                 {
@@ -214,11 +224,17 @@ namespace KEN_NFC_NEW
 
 		string FileOutput(string msg)
         {
-			string id = Value_Entry.Text;
+			string id = msg.Split('=')[1];
 			string oldid = "O:" + ((Transporter.replaceMode) ? Transporter.oldCode : "null");
 			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
 			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
-			return id + ";" + oldid + ";" + datetime + ";" + loc;
+			string link = msg;
+
+			Transporter.replaceMode = false;
+			Transporter.code = "";
+			Value_Entry.Text = "";
+
+			return id + ";" + oldid + ";" + datetime + ";" + loc + ";" + link;
         }
 
 		/// <summary>
@@ -248,7 +264,7 @@ namespace KEN_NFC_NEW
 						if (filePerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
 							await CrossPermissions.Current.RequestPermissionsAsync(Permission.Storage);
 
-						DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", tagInfo.Records[0].Message);
+						DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", FileOutput(tagInfo.Records[0].Message));
 
 						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst en opgeslagen", new TimeSpan(3));
 						Transporter.replaceMode = false;
@@ -276,9 +292,6 @@ namespace KEN_NFC_NEW
 		{
 			App.Current.MainPage = new NavigationPage(new MainPage());
 
-			if (Transporter.replaceMode)
-				Transporter.replaceMode = false;
-
 			if (!CrossNFC.Current.IsWritingTagSupported)
 			{
 				await ShowAlert("Writing tag is not supported on this device");
@@ -303,7 +316,7 @@ namespace KEN_NFC_NEW
 						record = new NFCNdefRecord
 						{
 							TypeFormat = NFCNdefTypeFormat.Uri,
-							Payload = NFCUtils.EncodeToByteArray("https://nfc.ken-monitoring.nl/tag.php?tag=" + Value_Entry.Text)
+							Payload = NFCUtils.EncodeToByteArray("http://nfc.ken-monitoring.nl/tag.php?tag=" + Value_Entry.Text)
 						};
 						break;
 					case NFCNdefTypeFormat.Mime:
@@ -341,6 +354,7 @@ namespace KEN_NFC_NEW
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
+		///
 		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
 		{
 			if (Value_Entry.Text != null && Value_Entry.Text != "")
@@ -375,6 +389,22 @@ namespace KEN_NFC_NEW
 		async Task Publish(NFCNdefTypeFormat? type = null)
 		{
 			await StartListeningIfNotiOS();
+			try
+			{
+				_type = NFCNdefTypeFormat.Empty;
+				_makeReadOnly = false;
+
+				if (type.HasValue) _type = type.Value;
+				CrossNFC.Current.StartPublishing(!type.HasValue);
+			}
+			catch (Exception ex)
+			{
+				await ShowAlert(ex.Message);
+			}
+		}
+
+		async Task PublishWhileListening(NFCNdefTypeFormat? type = null)
+        {
 			try
 			{
 				_type = NFCNdefTypeFormat.Empty;

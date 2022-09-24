@@ -21,20 +21,20 @@ namespace KEN_NFC_NEW.Droid
         public void SaveTextFile(string name, string text)
         {
             string rootPath = Application.Context.GetExternalFilesDir(null).ToString();
-            var path = Path.Combine(rootPath, name);
 
             Java.IO.File dir = new Java.IO.File(rootPath);
             dir.Mkdir();
 
-            try
-            {
-                System.IO.File.WriteAllText(path, text);
-                System.Console.WriteLine("Wrote file to " + path);
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("ERR: " + e.Message);
-            }
+            Java.IO.File file = new Java.IO.File(dir, name);
+
+            if (file.Exists()) 
+                file.Delete();
+
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.Write(new ASCIIEncoding().GetBytes(text));
+
+            fos.Flush();
+            fos.Close();
         }
 
         public async Task SaveAndView(string fileName, String contentType, MemoryStream stream)
