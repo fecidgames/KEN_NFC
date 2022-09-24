@@ -64,13 +64,8 @@ namespace KEN_NFC_NEW
 			if(Transporter.replaceMode)
             {
 				ShowAlert("Scan de NFC-tag om de nieuwe waarde te schrijven.");
-				ReplaceFinish();
+				//Check if you still actually need to write to the tag!!!
             }
-		}
-
-		private async void ReplaceFinish()
-        {
-			await Publish(NFCNdefTypeFormat.WellKnown);
 		}
 
 		protected async override void OnAppearing()
@@ -129,6 +124,7 @@ namespace KEN_NFC_NEW
 		void Button_Clicked_Scan(object sender, EventArgs e)
         {
 			App.Current.MainPage = new NavigationPage(new ScannerPage());
+			Transporter.replaceMode = false;
 		}
 
 		/// <summary>
@@ -210,7 +206,7 @@ namespace KEN_NFC_NEW
 
 		string FileOutput(string msg)
         {
-			string id = "T:" + msg;
+			string id = Value_Entry.Text;
 			string oldid = "O:" + ((Transporter.replaceMode) ? Transporter.oldCode : "null");
 			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
 			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
@@ -267,6 +263,9 @@ namespace KEN_NFC_NEW
 		{
 			App.Current.MainPage = new NavigationPage(new MainPage());
 
+			if (Transporter.replaceMode)
+				Transporter.replaceMode = false;
+
 			if (!CrossNFC.Current.IsWritingTagSupported)
 			{
 				await ShowAlert("Writing tag is not supported on this device");
@@ -291,7 +290,7 @@ namespace KEN_NFC_NEW
 						record = new NFCNdefRecord
 						{
 							TypeFormat = NFCNdefTypeFormat.Uri,
-							Payload = NFCUtils.EncodeToByteArray("https://github.com/franckbour/Plugin.NFC")
+							Payload = NFCUtils.EncodeToByteArray("https://nfc.ken-monitoring.nl/tag.php?tag=" + Value_Entry.Text)
 						};
 						break;
 					case NFCNdefTypeFormat.Mime:
@@ -332,7 +331,7 @@ namespace KEN_NFC_NEW
 		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
 		{
 			if (Value_Entry.Text != null && Value_Entry.Text != "")
-				await Publish(NFCNdefTypeFormat.WellKnown);
+				await Publish(NFCNdefTypeFormat.Uri);
 			else
 				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde kan niet leeg zijn.", new TimeSpan(3));
 			
@@ -430,6 +429,7 @@ namespace KEN_NFC_NEW
 			}
 			catch (Exception ex)
 			{
+				Console.WriteLine("BeginListening error");
 				await ShowAlert(ex.Message);
 			}
 		}
@@ -446,6 +446,7 @@ namespace KEN_NFC_NEW
 			}
 			catch (Exception ex)
 			{
+				Console.WriteLine("StopListening error");
 				await ShowAlert(ex.Message);
 			}
 		}
