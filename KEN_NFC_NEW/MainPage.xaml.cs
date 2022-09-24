@@ -3,18 +3,15 @@ using System;
 using System.ComponentModel;
 using System.Text;
 using System.Threading.Tasks;
-using System.IO;
 using Xamarin.Forms;
 using Xamarin.Essentials;
-using Acr.UserDialogs;
 using Rg.Plugins.Popup.Extensions;
 using Plugin.Permissions;
 using Plugin.Permissions.Abstractions;
-using Plugin.FileIO;
 
 namespace KEN_NFC_NEW
 {
-	public partial class MainPage : ContentPage, INotifyPropertyChanged
+    public partial class MainPage : ContentPage, INotifyPropertyChanged
 	{
 		public const string ALERT_TITLE = "NFC";
 		public const string MIME_TYPE = "application/com.ken.nfcapp";
@@ -112,6 +109,7 @@ namespace KEN_NFC_NEW
 			UnsubscribeEvents();
 			CrossNFC.Current.StopListening();
 			Transporter.replaceMode = false;
+
 			return base.OnBackButtonPressed();
 		}
 
@@ -149,7 +147,7 @@ namespace KEN_NFC_NEW
 			Console.WriteLine("Unsubscribing...");
 			CrossNFC.Current.OnMessageReceived -= Current_OnMessageReceived;
 			CrossNFC.Current.OnMessagePublished -= Current_OnMessagePublished;
-			CrossNFC.Current.OnTagDiscovered -= Current_OnTagDiscovered;
+            CrossNFC.Current.OnTagDiscovered -= Current_OnTagDiscovered;
 			CrossNFC.Current.OnNfcStatusChanged -= Current_OnNfcStatusChanged;
 			CrossNFC.Current.OnTagListeningStatusChanged -= Current_OnTagListeningStatusChanged;
 
@@ -192,14 +190,8 @@ namespace KEN_NFC_NEW
 			var serialNumber = NFCUtils.ByteArrayToHexString(identifier, ":");
 			var title = !string.IsNullOrWhiteSpace(serialNumber) ? $"Tag [{serialNumber}]" : "Tag Info";
 
-			if (!tagInfo.IsSupported)
-			{
-				await ShowAlert("Onherkenbare tag. Deze tag wordt niet ondersteund door dit apparaat of werkt incorrect.", title);
-			}
-			else if (tagInfo.IsEmpty)
-			{
-				await ShowAlert("Empty tag", title);
-			}
+			if (!tagInfo.IsSupported) await ShowAlert("Onherkenbare tag. Deze tag wordt niet ondersteund door dit apparaat of werkt incorrect.", title);
+            else if (tagInfo.IsEmpty) await ShowAlert("Empty tag", title);
 			else
 			{
 				var first = tagInfo.Records[0];
@@ -224,13 +216,13 @@ namespace KEN_NFC_NEW
 
 		string FileOutput(string msg)
         {
-			string id = msg.Split('=')[1];
+            string id = msg.Split('=')[1];
 			string oldid = "O:" + ((Transporter.replaceMode) ? Transporter.oldCode : "null");
 			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
 			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
 			string link = msg;
 
-			Transporter.replaceMode = false;
+            Transporter.replaceMode = false;
 			Transporter.code = "";
 			Value_Entry.Text = "";
 
@@ -257,9 +249,8 @@ namespace KEN_NFC_NEW
 					await ShowAlert("Chip is gereset.");
 				else
                 {
-					string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
-					try
-					{
+                    try
+                    {
 						var filePerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.Storage);
 						if (filePerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
 							await CrossPermissions.Current.RequestPermissionsAsync(Permission.Storage);
@@ -336,12 +327,8 @@ namespace KEN_NFC_NEW
 
 				tagInfo.Records = new[] { record };
 
-				if (format)
-					CrossNFC.Current.ClearMessage(tagInfo);
-				else
-				{
-					CrossNFC.Current.PublishMessage(tagInfo, _makeReadOnly);
-				}
+				if (format) CrossNFC.Current.ClearMessage(tagInfo);
+				else CrossNFC.Current.PublishMessage(tagInfo, _makeReadOnly);
 			}
 			catch (Exception ex)
 			{
