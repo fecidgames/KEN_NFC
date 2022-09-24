@@ -97,6 +97,7 @@ namespace KEN_NFC_NEW
 
 				SubscribeEvents();
 
+				await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
 				await StartListeningIfNotiOS();
 
 				if (Transporter.replaceMode && replacePopupGone)
@@ -198,14 +199,20 @@ namespace KEN_NFC_NEW
 				await ShowAlert(GetMessage(first) + "\nThe text has been saved to a file.", title);
 
 				//Saving text to a txt file here (override possible old file):
-				string fileName = "/storage/emulated/0/Download/ken-nfcresult.txt";
+				bool restart = false;
 				try {
 					var filePerm = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
 					if (filePerm != Xamarin.Essentials.PermissionStatus.Granted)
+					{
 						filePerm = await Permissions.RequestAsync<Permissions.StorageWrite>();
+						restart = true;
+					}
 
 					DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", FileOutput(tagInfo.Records[0].Message));
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen!", new TimeSpan(3));
+
+					if (restart)
+						App.Current.MainPage = new NavigationPage(new MainPage());
 				} catch (Exception e)
                 {
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opslaan mislukt, zie console.", new TimeSpan(3));
@@ -465,9 +472,8 @@ namespace KEN_NFC_NEW
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("BeginListening error");
-				await ShowAlert(ex.Message);
-			}
+				Console.WriteLine("BeginListening error, restarting page...");
+				App.Current.MainPage = new NavigationPage(new MainPage());			}
 		}
 
 		/// <summary>
