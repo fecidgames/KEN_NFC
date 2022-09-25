@@ -54,14 +54,12 @@
                    Color="LightGray"
                    Margin ="0, 10, 0, 10"
                    ScaleX="2"/>
-            
+
             <Button Clicked="Button_Clicked_Scan"
                     IsEnabled="True"
                     Text="Of scan een code"
                     x:Name="Button_Scan"
                     BackgroundColor="#bf4bcc" />
-            <Entry x:Name="Text_Barcode"
-                   Placeholder="Text to scan"/>
 
         </StackLayout>
     </ScrollView>

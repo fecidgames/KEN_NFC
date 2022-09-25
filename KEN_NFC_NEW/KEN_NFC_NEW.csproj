@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,7 +6,7 @@
     <PackageId>com.ken.nfcapp</PackageId>
     <Authors>KEN</Authors>
     <Product>KEN_NFC</Product>
-    <AssemblyName>KEN_NFC</AssemblyName>
+    <AssemblyName>KEN</AssemblyName>
     <ApplicationIcon>ico.ico</ApplicationIcon>
   </PropertyGroup>
 
