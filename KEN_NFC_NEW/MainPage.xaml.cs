@@ -9,39 +9,29 @@ using Rg.Plugins.Popup.Extensions;
 using Plugin.Permissions;
 using Plugin.Permissions.Abstractions;
 
-namespace KEN_NFC_NEW
-{
-    public partial class MainPage : ContentPage, INotifyPropertyChanged
-	{
+namespace KEN_NFC_NEW {
+    public partial class MainPage : ContentPage, INotifyPropertyChanged {
 		public const string ALERT_TITLE = "NFC";
 		public const string MIME_TYPE = "application/com.ken.nfcapp";
 
-		NFCNdefTypeFormat _type;
+        NFCNdefTypeFormat _type;
 		bool _makeReadOnly = false;
 		bool _eventsAlreadySubscribed = false;
 		bool _isDeviceiOS = false;
 
-		/// <summary>
-		/// Property that tracks whether the Android device is still listening,
-		/// so it can indicate that to the user.
-		/// </summary>
-		public bool DeviceIsListening
-		{
+        public bool DeviceIsListening {
 			get => _deviceIsListening;
-			set
-			{
+            set {
 				_deviceIsListening = value;
 				OnPropertyChanged(nameof(DeviceIsListening));
 			}
 		}
 		private bool _deviceIsListening;
-
 		private bool _nfcIsEnabled;
-		public bool NfcIsEnabled
-		{
+
+        public bool NfcIsEnabled {
 			get => _nfcIsEnabled;
-			set
-			{
+            set {
 				_nfcIsEnabled = value;
 				OnPropertyChanged(nameof(NfcIsEnabled));
 				OnPropertyChanged(nameof(NfcIsDisabled));
@@ -51,21 +41,15 @@ namespace KEN_NFC_NEW
 		public bool NfcIsDisabled => !NfcIsEnabled;
 		private bool replacePopupGone = false;
 
-		public MainPage()
-		{
+        public MainPage() {
 			InitializeComponent();
-			if(!Transporter.replaceMode) 
-			{ 
-				if (Transporter.code != null && Value_Entry != null)
-				{
+			if(!Transporter.replaceMode) {
+                if(Transporter.code != null && Value_Entry != null) {
 					Value_Entry.Text = Transporter.code;
 					Transporter.code = "";
 				}
-			}
-			if(Transporter.replaceMode)
-            {
-				if (Transporter.code != null)
-				{
+            } else {
+                if(Transporter.code != null) {
 					Value_Entry.Text = Transporter.code;
 					Transporter.code = "";
 				}
@@ -75,24 +59,23 @@ namespace KEN_NFC_NEW
 			}
         }
 
-		protected async override void OnAppearing()
-		{
+		protected async override void OnAppearing() {
 			base.OnAppearing();
 
 			CrossNFC.Legacy = false;
 
-			if (CrossNFC.IsSupported) {
-				if (!CrossNFC.Current.IsAvailable)
+			if(CrossNFC.IsSupported) {
+				if(!CrossNFC.Current.IsAvailable)
 					await ShowAlert("NFC is not available");
 
 				NfcIsEnabled = CrossNFC.Current.IsEnabled;
 				Console.WriteLine("NFC status: " + NfcIsEnabled);
-				if (!NfcIsEnabled)
+				if(!NfcIsEnabled)
 					await ShowAlert("NFC is disabled");
 
 				Console.WriteLine(NfcIsDisabled);
 
-				if (Device.RuntimePlatform == Device.iOS)
+				if(Device.RuntimePlatform == Device.iOS)
 					_isDeviceiOS = true;
 
 				SubscribeEvents();
@@ -100,13 +83,12 @@ namespace KEN_NFC_NEW
 				await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
 				await StartListeningIfNotiOS();
 
-				if (Transporter.replaceMode && replacePopupGone)
+				if(Transporter.replaceMode && replacePopupGone)
 					await Publish(NFCNdefTypeFormat.Uri);
 			}
 		}
 
-		protected override bool OnBackButtonPressed()
-		{
+        protected override bool OnBackButtonPressed() {
 			UnsubscribeEvents();
 			CrossNFC.Current.StopListening();
 			Transporter.replaceMode = false;
@@ -114,12 +96,30 @@ namespace KEN_NFC_NEW
 			return base.OnBackButtonPressed();
 		}
 
-		/// <summary>
-		/// Subscribe to the NFC events
-		/// </summary>
-		void SubscribeEvents()
-		{
-			if (_eventsAlreadySubscribed)
+		void Button_Clicked_Scan(object sender, EventArgs e) {
+			App.Current.MainPage = new NavigationPage(new ScannerPage());
+			Transporter.replaceMode = false;
+		}
+		async void Button_Clicked_StartWriting(object sender, System.EventArgs e) {
+			if(Value_Entry.Text != null && Value_Entry.Text != "") {
+				var locPerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.LocationWhenInUse);
+				if(locPerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
+					await CrossPermissions.Current.RequestPermissionsAsync(Permission.LocationWhenInUse);
+
+				await Publish(NFCNdefTypeFormat.Uri);
+			} else
+				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde kan niet leeg zijn.", new TimeSpan(3));
+
+		}
+
+		async void Button_Clicked_Replace(object sender, System.EventArgs e) {
+			Transporter.replaceMode = true;
+			await Navigation.PushPopupAsync(new ReplacePopup());
+		}
+
+
+		void SubscribeEvents() {
+			if(_eventsAlreadySubscribed)
 				return;
 
 			_eventsAlreadySubscribed = true;
@@ -130,58 +130,36 @@ namespace KEN_NFC_NEW
 			CrossNFC.Current.OnNfcStatusChanged += Current_OnNfcStatusChanged;
 			CrossNFC.Current.OnTagListeningStatusChanged += Current_OnTagListeningStatusChanged;
 
-			if (_isDeviceiOS)
+			if(_isDeviceiOS)
 				CrossNFC.Current.OniOSReadingSessionCancelled += Current_OniOSReadingSessionCancelled;
 		}
 
-		void Button_Clicked_Scan(object sender, EventArgs e)
-        {
-			App.Current.MainPage = new NavigationPage(new ScannerPage());
-			Transporter.replaceMode = false;
-		}
-
-		/// <summary>
-		/// Unsubscribe from the NFC events
-		/// </summary>
-		void UnsubscribeEvents()
-		{
+		void UnsubscribeEvents() {
 			Console.WriteLine("Unsubscribing...");
 			CrossNFC.Current.OnMessageReceived -= Current_OnMessageReceived;
 			CrossNFC.Current.OnMessagePublished -= Current_OnMessagePublished;
-            CrossNFC.Current.OnTagDiscovered -= Current_OnTagDiscovered;
+			CrossNFC.Current.OnTagDiscovered -= Current_OnTagDiscovered;
 			CrossNFC.Current.OnNfcStatusChanged -= Current_OnNfcStatusChanged;
 			CrossNFC.Current.OnTagListeningStatusChanged -= Current_OnTagListeningStatusChanged;
 
-			if (_isDeviceiOS)
+			if(_isDeviceiOS)
 				CrossNFC.Current.OniOSReadingSessionCancelled -= Current_OniOSReadingSessionCancelled;
 		}
 
-		/// <summary>
 		/// Event raised when Listener Status has changed
-		/// </summary>
-		/// <param name="isListening"></param>
 		void Current_OnTagListeningStatusChanged(bool isListening) => DeviceIsListening = isListening;
 
-		/// <summary>
 		/// Event raised when NFC Status has changed
-		/// </summary>
-		/// <param name="isEnabled">NFC status</param>
-		async void Current_OnNfcStatusChanged(bool isEnabled)
-		{
+		async void Current_OnNfcStatusChanged(bool isEnabled) {
 			NfcIsEnabled = isEnabled;
 			await ShowAlert($"NFC has been {(isEnabled ? "enabled" : "disabled")}");
 		}
 
-		/// <summary>
-		/// Event raised when a NDEF message is received
-		/// </summary>
-		/// <param name="tagInfo">Received <see cref="ITagInfo"/></param>
-		async void Current_OnMessageReceived(ITagInfo tagInfo)
-		{
+		/// Event raised when an NDEF message is received
+		async void Current_OnMessageReceived(ITagInfo tagInfo) {
 			App.Current.MainPage = new NavigationPage(new MainPage());
 
-			if (tagInfo == null)
-			{
+			if(tagInfo == null) {
 				await ShowAlert("No tag found");
 				return;
 			}
@@ -191,10 +169,11 @@ namespace KEN_NFC_NEW
 			var serialNumber = NFCUtils.ByteArrayToHexString(identifier, ":");
 			var title = !string.IsNullOrWhiteSpace(serialNumber) ? $"Tag [{serialNumber}]" : "Tag Info";
 
-			if (!tagInfo.IsSupported) await ShowAlert("Onherkenbare tag. Deze tag wordt niet ondersteund door dit apparaat of werkt incorrect.", title);
-            else if (tagInfo.IsEmpty) await ShowAlert("Empty tag", title);
-			else
-			{
+			if(!tagInfo.IsSupported)
+				await ShowAlert("Onherkenbare tag. Deze tag wordt niet ondersteund door dit apparaat of werkt incorrect.", title);
+			else if(tagInfo.IsEmpty)
+				await ShowAlert("Empty tag", title);
+			else {
 				var first = tagInfo.Records[0];
 				await ShowAlert(GetMessage(first) + "\nThe text has been saved to a file.", title);
 
@@ -202,8 +181,7 @@ namespace KEN_NFC_NEW
 				bool restart = false;
 				try {
 					var filePerm = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
-					if (filePerm != Xamarin.Essentials.PermissionStatus.Granted)
-					{
+					if(filePerm != Xamarin.Essentials.PermissionStatus.Granted) {
 						filePerm = await Permissions.RequestAsync<Permissions.StorageWrite>();
 						restart = true;
 					}
@@ -211,99 +189,74 @@ namespace KEN_NFC_NEW
 					DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", FileOutput(tagInfo.Records[0].Message));
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opgeslagen!", new TimeSpan(3));
 
-					if (restart)
+					if(restart)
 						App.Current.MainPage = new NavigationPage(new MainPage());
-				} catch (Exception e)
-                {
+				} catch(Exception e) {
 					Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("Opslaan mislukt, zie console.", new TimeSpan(3));
 					Console.WriteLine("Stacktrace: " + e.Message);
 				}
 			}
 		}
 
-		string FileOutput(string msg)
-        {
-            string id = msg.Split('=')[1];
+		//Formats the tag link (msg) to put in the file
+		string FileOutput(string msg) {
+			string id = msg.Split('=')[1];
 			string oldid = "O:" + ((Transporter.replaceMode) ? Transporter.oldCode : "null");
 			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
 			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
 			string link = msg;
 
-            Transporter.replaceMode = false;
+			Transporter.replaceMode = false;
 			Transporter.code = "";
 			Value_Entry.Text = "";
 
 			return id + ";" + oldid + ";" + datetime + ";" + loc + ";" + link;
-        }
+		}
 
-		/// <summary>
 		/// Event raised when user cancelled NFC session on iOS 
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
 		void Current_OniOSReadingSessionCancelled(object sender, EventArgs e) => Debug("iOS NFC Session has been cancelled");
 
-		/// <summary>
 		/// Event raised when data has been published on the tag
-		/// </summary>
-		/// <param name="tagInfo">Published <see cref="ITagInfo"/></param>
-		async void Current_OnMessagePublished(ITagInfo tagInfo)
-		{
-			try
-			{
+		async void Current_OnMessagePublished(ITagInfo tagInfo) {
+			try {
 				CrossNFC.Current.StopPublishing();
-				if (tagInfo.IsEmpty)
+				if(tagInfo.IsEmpty)
 					await ShowAlert("Chip is gereset.");
-				else
-                {
-                    try
-                    {
+				else {
+					try {
 						var filePerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.Storage);
-						if (filePerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
+						if(filePerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
 							await CrossPermissions.Current.RequestPermissionsAsync(Permission.Storage);
 
 						DependencyService.Get<IFileService>().SaveTextFile("ken-nfcresult.txt", FileOutput(tagInfo.Records[0].Message));
 
 						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst en opgeslagen", new TimeSpan(3));
 						Transporter.replaceMode = false;
-					}
-					catch (Exception ex)
-					{
+					} catch(Exception ex) {
 						Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde is op de chip geplaatst, maar het bestand is niet geschreven. Zie console.", new TimeSpan(3));
 						Console.WriteLine("StackTrace: " + ex.Message);
 					}
 				}
-					
-			}
-			catch (Exception ex)
-			{
+
+			} catch(Exception ex) {
 				await ShowAlert(ex.Message);
 			}
 		}
 
-		/// <summary>
 		/// Event raised when a NFC Tag is discovered
-		/// </summary>
-		/// <param name="tagInfo"><see cref="ITagInfo"/> to be published</param>
-		/// <param name="format">Format the tag</param>
-		async void Current_OnTagDiscovered(ITagInfo tagInfo, bool format)
-		{
+		async void Current_OnTagDiscovered(ITagInfo tagInfo, bool format) {
 			App.Current.MainPage = new NavigationPage(new MainPage());
 
-			if (!CrossNFC.Current.IsWritingTagSupported)
-			{
+			if(!CrossNFC.Current.IsWritingTagSupported) {
 				await ShowAlert("Writing tag is not supported on this device");
 				return;
 			}
 
-			try
-			{
+			try {
 				NFCNdefRecord record = null;
-				switch (_type)
-				{
+				switch(_type) {
 					case NFCNdefTypeFormat.WellKnown:
-						record = new NFCNdefRecord
-						{
+						record = new NFCNdefRecord {
 							TypeFormat = NFCNdefTypeFormat.WellKnown,
 							MimeType = MIME_TYPE,
 							Payload = (Transporter.replaceMode) ? NFCUtils.EncodeToByteArray(Transporter.code) : NFCUtils.EncodeToByteArray(Value_Entry.Text),
@@ -311,15 +264,13 @@ namespace KEN_NFC_NEW
 						};
 						break;
 					case NFCNdefTypeFormat.Uri:
-						record = new NFCNdefRecord
-						{
+						record = new NFCNdefRecord {
 							TypeFormat = NFCNdefTypeFormat.Uri,
 							Payload = NFCUtils.EncodeToByteArray("http://nfc.ken-monitoring.nl/tag.php?tag=" + Value_Entry.Text)
 						};
 						break;
 					case NFCNdefTypeFormat.Mime:
-						record = new NFCNdefRecord
-						{
+						record = new NFCNdefRecord {
 							TypeFormat = NFCNdefTypeFormat.Mime,
 							MimeType = MIME_TYPE,
 							Payload = NFCUtils.EncodeToByteArray("Plugin.NFC is awesome!")
@@ -329,105 +280,58 @@ namespace KEN_NFC_NEW
 						break;
 				}
 
-				if (!format && record == null)
+				if(!format && record == null)
 					throw new Exception("Record can't be null.");
 
 				tagInfo.Records = new[] { record };
 
-				if (format) CrossNFC.Current.ClearMessage(tagInfo);
-				else CrossNFC.Current.PublishMessage(tagInfo, _makeReadOnly);
-			}
-			catch (Exception ex)
-			{
+				if(format)
+					CrossNFC.Current.ClearMessage(tagInfo);
+				else
+					CrossNFC.Current.PublishMessage(tagInfo, _makeReadOnly);
+			} catch(Exception ex) {
 				await ShowAlert(ex.Message);
 			}
 		}
 
-		/// <summary>
-		/// Start publish operation to write the tag (TEXT) when <see cref="Current_OnTagDiscovered(ITagInfo, bool)"/> event will be raised
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		///
-		async void Button_Clicked_StartWriting(object sender, System.EventArgs e)
-		{
-			if (Value_Entry.Text != null && Value_Entry.Text != "")
-			{
-				var locPerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.LocationWhenInUse);
-				if(locPerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
-					await CrossPermissions.Current.RequestPermissionsAsync(Permission.LocationWhenInUse);
-
-				await Publish(NFCNdefTypeFormat.Uri);
-			} 
-			else
-				Acr.UserDialogs.Extended.UserDialogs.Instance.Toast("De waarde kan niet leeg zijn.", new TimeSpan(3));
-			
-		}
-
-		/// <summary>
-		/// Start publish operation to format the tag when <see cref="Current_OnTagDiscovered(ITagInfo, bool)"/> event will be raised
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		async void Button_Clicked_Replace(object sender, System.EventArgs e)
-        {
-			Transporter.replaceMode = true;
-			await Navigation.PushPopupAsync(new ReplacePopup());
-        }
-
-		/// <summary>
 		/// Task to publish data to the tag
-		/// </summary>
-		/// <param name="type"><see cref="NFCNdefTypeFormat"/></param>
-		/// <returns>The task to be performed</returns>
-		async Task Publish(NFCNdefTypeFormat? type = null)
-		{
+		async Task Publish(NFCNdefTypeFormat? type = null) {
 			await StartListeningIfNotiOS();
-			try
-			{
+			try {
 				_type = NFCNdefTypeFormat.Empty;
 				_makeReadOnly = false;
 
-				if (type.HasValue) _type = type.Value;
+				if(type.HasValue)
+					_type = type.Value;
 				CrossNFC.Current.StartPublishing(!type.HasValue);
-			}
-			catch (Exception ex)
-			{
+			} catch(Exception ex) {
 				await ShowAlert(ex.Message);
 			}
 		}
 
-		async Task PublishWhileListening(NFCNdefTypeFormat? type = null)
-        {
-			try
-			{
+		///  Task to publish data to the tag while listening for a tag
+		async Task PublishWhileListening(NFCNdefTypeFormat? type = null) {
+			try {
 				_type = NFCNdefTypeFormat.Empty;
 				_makeReadOnly = false;
 
-				if (type.HasValue) _type = type.Value;
+				if(type.HasValue)
+					_type = type.Value;
 				CrossNFC.Current.StartPublishing(!type.HasValue);
-			}
-			catch (Exception ex)
-			{
+			} catch(Exception ex) {
 				await ShowAlert(ex.Message);
 			}
 		}
 
-		/// <summary>
 		/// Returns the tag information from NDEF record
-		/// </summary>
-		/// <param name="record"><see cref="NFCNdefRecord"/></param>
-		/// <returns>The tag information</returns>
-		string GetMessage(NFCNdefRecord record)
-		{
+		string GetMessage(NFCNdefRecord record) {
 			var message = $"Message: {record.Message}";
 			message += Environment.NewLine;
 			message += $"RawMessage: {Encoding.UTF8.GetString(record.Payload)}";
 			message += Environment.NewLine;
 			message += $"Type: {record.TypeFormat}";
 
-			if (!string.IsNullOrWhiteSpace(record.MimeType))
-			{
+			if(!string.IsNullOrWhiteSpace(record.MimeType)) {
 				message += Environment.NewLine;
 				message += $"MimeType: {record.MimeType}";
 			}
@@ -435,59 +339,34 @@ namespace KEN_NFC_NEW
 			return message;
 		}
 
-		/// <summary>
 		/// Write a debug message in the debug console
-		/// </summary>
-		/// <param name="message">The message to be displayed</param>
 		void Debug(string message) => System.Diagnostics.Debug.WriteLine(message);
 
-		/// <summary>
 		/// Display an alert
-		/// </summary>
-		/// <param name="message">Message to be displayed</param>
-		/// <param name="title">Alert title</param>
-		/// <returns>The task to be performed</returns>
 		Task ShowAlert(string message, string title = null) => DisplayAlert(string.IsNullOrWhiteSpace(title) ? ALERT_TITLE : title, message, "OK");
 
-		/// <summary>
 		/// Task to start listening for NFC tags if the user's device platform is not iOS
-		/// </summary>
-		/// <returns>The task to be performed</returns>
-		async Task StartListeningIfNotiOS()
-		{
-			if (_isDeviceiOS)
+		async Task StartListeningIfNotiOS() {
+			if(_isDeviceiOS)
 				return;
 			await BeginListening();
 		}
 
-		/// <summary>
 		/// Task to safely start listening for NFC Tags
-		/// </summary>
-		/// <returns>The task to be performed</returns>
-		async Task BeginListening()
-		{
-			try
-			{
+		async Task BeginListening() {
+			try {
 				CrossNFC.Current.StartListening();
-			}
-			catch (Exception ex)
-			{
+			} catch(Exception ex) {
 				Console.WriteLine("BeginListening error, restarting page...");
-				App.Current.MainPage = new NavigationPage(new MainPage());			}
+				App.Current.MainPage = new NavigationPage(new MainPage());
+			}
 		}
 
-		/// <summary>
 		/// Task to safely stop listening for NFC tags
-		/// </summary>
-		/// <returns>The task to be performed</returns>
-		async Task StopListening()
-		{
-			try
-			{
+		async Task StopListening() {
+			try {
 				CrossNFC.Current.StopListening();
-			}
-			catch (Exception ex)
-			{
+			} catch(Exception ex) {
 				Console.WriteLine("StopListening error");
 				await ShowAlert(ex.Message);
 			}
