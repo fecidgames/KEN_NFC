@@ -102,6 +102,7 @@ namespace KEN_NFC_NEW {
 		}
 		async void Button_Clicked_StartWriting(object sender, System.EventArgs e) {
 			if(Value_Entry.Text != null && Value_Entry.Text != "") {
+				writeButton.BackgroundColor = Color.Purple;
 				var locPerm = await CrossPermissions.Current.CheckPermissionStatusAsync(Permission.LocationWhenInUse);
 				if(locPerm != Plugin.Permissions.Abstractions.PermissionStatus.Granted)
 					await CrossPermissions.Current.RequestPermissionsAsync(Permission.LocationWhenInUse);
@@ -203,10 +204,18 @@ namespace KEN_NFC_NEW {
 			string id = msg.Split('=')[1];
 			string oldid = "O:" + ((Transporter.replaceMode) ? Transporter.oldCode : "null");
 			string datetime = DateTime.Now.ToString("dd-MM-yyyy;HH:mm:ss");
-			string loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
+			string loc = "";
 			string link = msg;
 
-			Transporter.replaceMode = false;
+			try
+			{
+				loc = Geolocation.GetLastKnownLocationAsync().Result.ToString();
+			} catch(Exception e)
+			{
+				Console.WriteLine("LocStacktrace: " + e.Message);
+			}
+
+                Transporter.replaceMode = false;
 			Transporter.code = "";
 			Value_Entry.Text = "";
 
@@ -218,7 +227,8 @@ namespace KEN_NFC_NEW {
 
 		/// Event raised when data has been published on the tag
 		async void Current_OnMessagePublished(ITagInfo tagInfo) {
-			try {
+			writeButton.BackgroundColor = Color.Green;
+            try {
 				CrossNFC.Current.StopPublishing();
 				if(tagInfo.IsEmpty)
 					await ShowAlert("Chip is gereset.");
