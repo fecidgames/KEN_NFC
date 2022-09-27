@@ -42,6 +42,7 @@
 
                 <Button Clicked="Button_Clicked_StartWriting"
                             IsEnabled="True"
+                            x:Name="writeButton"
                             Text="Chip schrijven" />
             </StackLayout>
 
